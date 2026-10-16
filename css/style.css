@@ -1,0 +1,509 @@
+/* ==========================================================================
+   FocusFlow - Adaptive & Persuasive HCI Interface
+   Topic 10: Context-Aware & Adaptive Interfaces
+   Topic 6: Persuasive Technology & Behavioral Design
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Circadian Theme Design System (CSS Custom Properties)
+   These variables are dynamically altered by ContextEngine.js based on:
+   - Solar/circadian time of day
+   - Manual override toggle
+   - User cognitive fatigue level
+   -------------------------------------------------------------------------- */
+
+:root {
+  /* Default / Afternoon Base (Peak Flow) */
+  --bg-primary: #090a16;
+  --bg-secondary: #0f1123;
+  --glass-bg: rgba(22, 27, 46, 0.65);
+  --glass-card: rgba(30, 36, 60, 0.55);
+  --glass-border: rgba(147, 197, 253, 0.15);
+  --glass-border-focus: rgba(129, 140, 248, 0.45);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  
+  --accent-primary: #6366f1; /* Indigo */
+  --accent-secondary: #8b5cf6; /* Violet */
+  --accent-glow: rgba(99, 102, 241, 0.35);
+  --accent-text: #c7d2fe;
+  
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  
+  --ambient-orb-1: rgba(79, 70, 229, 0.22);
+  --ambient-orb-2: rgba(139, 92, 246, 0.18);
+  --ambient-orb-3: rgba(56, 189, 248, 0.12);
+
+  --ring-gradient-start: #6366f1;
+  --ring-gradient-end: #a855f7;
+
+  --font-contrast-filter: none;
+  --filter-blue-light: none;
+}
+
+/* MORNING CONTEXT: High Alertness, Cool Crisp Blue/Cyan, High Luminance */
+[data-context="morning"] {
+  --bg-primary: #05131f;
+  --bg-secondary: #0b2238;
+  --glass-bg: rgba(15, 38, 64, 0.70);
+  --glass-card: rgba(20, 48, 80, 0.60);
+  --glass-border: rgba(56, 189, 248, 0.25);
+  --glass-border-focus: rgba(56, 189, 248, 0.6);
+  --glass-shadow: 0 8px 32px 0 rgba(2, 44, 75, 0.45);
+
+  --accent-primary: #0ea5e9; /* Sky Blue */
+  --accent-secondary: #10b981; /* Emerald Alertness */
+  --accent-glow: rgba(14, 165, 233, 0.38);
+  --accent-text: #bae6fd;
+
+  --text-primary: #ffffff;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+
+  --ambient-orb-1: rgba(14, 165, 233, 0.25);
+  --ambient-orb-2: rgba(16, 185, 129, 0.20);
+  --ambient-orb-3: rgba(56, 189, 248, 0.15);
+
+  --ring-gradient-start: #0ea5e9;
+  --ring-gradient-end: #10b981;
+
+  --font-contrast-filter: contrast(105%);
+  --filter-blue-light: none;
+}
+
+/* AFTERNOON CONTEXT: Peak Sustained Focus, Deep Indigo/Electric Purple */
+[data-context="afternoon"] {
+  --bg-primary: #090a16;
+  --bg-secondary: #0f1123;
+  --glass-bg: rgba(22, 27, 46, 0.68);
+  --glass-card: rgba(30, 36, 60, 0.58);
+  --glass-border: rgba(147, 197, 253, 0.18);
+  --glass-border-focus: rgba(129, 140, 248, 0.5);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+
+  --accent-primary: #6366f1;
+  --accent-secondary: #8b5cf6;
+  --accent-glow: rgba(99, 102, 241, 0.35);
+  --accent-text: #c7d2fe;
+
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  --ambient-orb-1: rgba(99, 102, 241, 0.22);
+  --ambient-orb-2: rgba(168, 85, 247, 0.18);
+  --ambient-orb-3: rgba(59, 130, 246, 0.14);
+
+  --ring-gradient-start: #6366f1;
+  --ring-gradient-end: #c084fc;
+
+  --font-contrast-filter: none;
+  --filter-blue-light: none;
+}
+
+/* NIGHT CONTEXT: Melatonin Protective, Candlelight Warm Amber & Ultra-Deep Obsidian */
+[data-context="night"] {
+  --bg-primary: #0a0806;
+  --bg-secondary: #14100c;
+  --glass-bg: rgba(28, 22, 17, 0.72);
+  --glass-card: rgba(38, 30, 23, 0.62);
+  --glass-border: rgba(245, 158, 11, 0.22);
+  --glass-border-focus: rgba(245, 158, 11, 0.55);
+  --glass-shadow: 0 8px 32px 0 rgba(20, 10, 4, 0.5);
+
+  --accent-primary: #f59e0b; /* Amber */
+  --accent-secondary: #f97316; /* Warm Orange */
+  --accent-glow: rgba(245, 158, 11, 0.32);
+  --accent-text: #fde68a;
+
+  --text-primary: #fef3c7;
+  --text-secondary: #d4a373;
+  --text-muted: #8c7355;
+
+  --ambient-orb-1: rgba(245, 158, 11, 0.20);
+  --ambient-orb-2: rgba(234, 88, 12, 0.15);
+  --ambient-orb-3: rgba(180, 83, 9, 0.12);
+
+  --ring-gradient-start: #f59e0b;
+  --ring-gradient-end: #ea580c;
+
+  --font-contrast-filter: contrast(96%) brightness(95%);
+  --filter-blue-light: sepia(18%);
+}
+
+/* HIGH FATIGUE ADAPTIVE OVERLAY: Minimalist Cognitive Load Reduction */
+[data-fatigue="high"] {
+  --glass-bg: rgba(20, 22, 30, 0.85);
+  --glass-border: rgba(251, 191, 36, 0.35);
+  --text-secondary: #cbd5e1;
+  --accent-primary: #f59e0b;
+}
+
+/* --------------------------------------------------------------------------
+   2. Base & Typography Transitions
+   -------------------------------------------------------------------------- */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  overflow-x: hidden;
+  transition: background-color 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.5s ease,
+              filter 0.8s ease;
+  filter: var(--filter-blue-light);
+}
+
+/* Smooth Focus Ring for Keyboard Accessibility (HCI Principle) */
+*:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* --------------------------------------------------------------------------
+   3. Glassmorphism Architectural Primitives
+   -------------------------------------------------------------------------- */
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel:hover {
+  border-color: var(--glass-border-focus);
+}
+
+.glass-card {
+  background: var(--glass-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--glass-border-focus);
+  box-shadow: 0 10px 25px -5px var(--accent-glow);
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  transition: all 0.25s ease;
+}
+
+.glass-pill:hover, .glass-pill.active {
+  background: var(--accent-glow);
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+}
+
+/* --------------------------------------------------------------------------
+   4. Ambient Glowing Background Orbs
+   Subtle non-distracting background dynamics supporting aesthetic ergonomics
+   -------------------------------------------------------------------------- */
+
+.ambient-container {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ambient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.75;
+  transition: background 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 10s ease-in-out infinite alternate;
+}
+
+.ambient-orb-1 {
+  width: 500px;
+  height: 500px;
+  top: -100px;
+  left: 10%;
+  background: var(--ambient-orb-1);
+  animation: floatOrb1 16s ease-in-out infinite alternate;
+}
+
+.ambient-orb-2 {
+  width: 450px;
+  height: 450px;
+  bottom: 5%;
+  right: 5%;
+  background: var(--ambient-orb-2);
+  animation: floatOrb2 20s ease-in-out infinite alternate;
+}
+
+.ambient-orb-3 {
+  width: 350px;
+  height: 350px;
+  top: 45%;
+  left: 65%;
+  background: var(--ambient-orb-3);
+  animation: floatOrb3 18s ease-in-out infinite alternate;
+}
+
+@keyframes floatOrb1 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(60px, 80px) scale(1.15); }
+}
+
+@keyframes floatOrb2 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-70px, -50px) scale(1.2); }
+}
+
+@keyframes floatOrb3 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-40px, 60px) scale(0.9); }
+}
+
+/* --------------------------------------------------------------------------
+   5. Circular Progress Ring (HCI Visual Feedback)
+   -------------------------------------------------------------------------- */
+
+.timer-circle-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timer-ring-bg {
+  stroke: rgba(255, 255, 255, 0.06);
+}
+
+.timer-ring-progress {
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.6s ease;
+  filter: drop-shadow(0 0 12px var(--accent-glow));
+}
+
+/* Breathing animation during active focus session */
+.timer-pulse-active {
+  animation: breathePulse 4s ease-in-out infinite;
+}
+
+@keyframes breathePulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 var(--accent-glow);
+  }
+  50% {
+    transform: scale(1.015);
+    box-shadow: 0 0 35px 8px var(--accent-glow);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   6. Gamified Streak & Badge Animations (Topic 6: Persuasive Reinforcement)
+   -------------------------------------------------------------------------- */
+
+.streak-flame {
+  display: inline-block;
+  animation: flameFlicker 1.8s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.7));
+}
+
+@keyframes flameFlicker {
+  0% { transform: scale(1) rotate(-2deg); }
+  50% { transform: scale(1.15) rotate(3deg); }
+  100% { transform: scale(1.05) rotate(-3deg); }
+}
+
+/* --------------------------------------------------------------------------
+   7. HCI Concept Inspector Drawer (Slide-Over Panel)
+   -------------------------------------------------------------------------- */
+
+.inspector-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 480px;
+  background: rgba(12, 15, 28, 0.94);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-left: 1px solid var(--glass-border);
+  box-shadow: -15px 0 50px rgba(0, 0, 0, 0.6);
+  z-index: 60;
+  transform: translateX(105%);
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.inspector-drawer.open {
+  transform: translateX(0%);
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 55;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.drawer-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Telemetry code snippet aesthetic */
+.telemetry-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8125rem;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0.75rem;
+  color: #38bdf8;
+}
+
+/* --------------------------------------------------------------------------
+   8. Psychological Nudge Modal & Toast Animations
+   -------------------------------------------------------------------------- */
+
+.nudge-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 7, 15, 0.82);
+  backdrop-filter: blur(8px);
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nudge-modal-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.nudge-modal-content {
+  background: var(--glass-bg);
+  border: 1px solid var(--accent-primary);
+  box-shadow: 0 20px 50px -10px var(--accent-glow), 0 0 0 1px var(--glass-border);
+  transform: scale(0.92) translateY(12px);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nudge-modal-overlay.open .nudge-modal-content {
+  transform: scale(1) translateY(0);
+}
+
+/* Toast Nudge notification */
+.toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 90%;
+  max-width: 440px;
+  pointer-events: none;
+}
+
+.toast-item {
+  pointer-events: auto;
+  background: var(--glass-card);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--accent-primary);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  padding: 0.875rem 1.25rem;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  animation: toastSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes toastSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   9. Custom Scrollbar Styling
+   -------------------------------------------------------------------------- */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+
+/* --------------------------------------------------------------------------
+   10. Responsiveness & Accessibility Micro-Tweaks
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 640px) {
+  .inspector-drawer {
+    max-width: 100%;
+  }
+  
+  .timer-circle-container svg {
+    width: 270px;
+    height: 270px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

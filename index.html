@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en" data-context="afternoon" data-fatigue="normal">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FocusFlow - Adaptive & Persuasive HCI Interface</title>
+  <meta name="description" content="HCI Prototype demonstrating Topic 10 (Context-Aware Interfaces) and Topic 6 (Persuasive Technology).">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              900: '#1e1b4b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Custom Circadian Glassmorphic Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="relative flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+  <!-- Ambient Glowing Mesh Orbs (Circadian Dynamic) -->
+  <div class="ambient-container" aria-hidden="true">
+    <div class="ambient-orb ambient-orb-1"></div>
+    <div class="ambient-orb ambient-orb-2"></div>
+    <div class="ambient-orb ambient-orb-3"></div>
+  </div>
+
+  <!-- App Header & Navigation Bar -->
+  <header class="sticky top-0 z-40 border-b border-white/10 glass-panel">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-18 py-3 flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo & HCI Topic Tag -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-sky-400 p-[2px] shadow-lg shadow-indigo-500/25">
+          <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center font-black text-xl text-white tracking-wider">
+            F
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-lg tracking-tight text-white">FocusFlow</span>
+            <span class="px-2 py-0.5 text-[10px] uppercase font-semibold rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">HCI Prototype</span>
+          </div>
+          <div class="text-[11px] text-slate-400 hidden sm:block">Topics 6 & 10: Adaptive Context & Behavioral Nudges</div>
+        </div>
+      </div>
+
+      <!-- Context Override & Evaluation Controls -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        
+        <!-- Detected Context Status Badge -->
+        <div class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass-card text-xs font-medium text-slate-300 border border-white/10">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="active-context-badge">⚡ Peak Afternoon</span>
+        </div>
+
+        <!-- Manual Context Override Switcher (Instructor Evaluation Tool) -->
+        <div class="flex items-center gap-1 glass-card px-2 py-1 rounded-lg border border-white/10" title="Manually override context to test interface adaptations">
+          <label for="context-override-select" class="text-xs text-slate-400 hidden lg:inline">Context:</label>
+          <select id="context-override-select" class="bg-transparent text-xs text-slate-200 border-none outline-none cursor-pointer focus:ring-0">
+            <option value="auto" class="bg-slate-900 text-slate-200">Auto (Circadian Clock)</option>
+            <option value="morning" class="bg-slate-900 text-sky-400">🌅 Morning (High Alert)</option>
+            <option value="afternoon" class="bg-slate-900 text-indigo-400">⚡ Afternoon (Flow)</option>
+            <option value="night" class="bg-slate-900 text-amber-400">🌙 Night (Melatonin Guard)</option>
+          </select>
+        </div>
+
+        <!-- Audio Mute Toggle Button -->
+        <button id="audio-mute-btn" class="p-2 rounded-lg glass-pill text-slate-300 hover:text-white" title="Toggle audio cues (Press M)" aria-label="Toggle Audio">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+          </svg>
+        </button>
+
+        <!-- Ambient Sound Toggle (Focus Rain/White Noise) -->
+        <button id="ambient-sound-btn" class="p-2 rounded-lg glass-pill text-slate-300 hover:text-white hidden sm:flex items-center gap-1.5" title="Toggle Acoustic Masking (Rain sound)" aria-label="Toggle Ambient Rain">
+          <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z" />
+          </svg>
+          <span id="ambient-sound-status" class="text-xs">Focus Noise</span>
+        </button>
+
+        <!-- Teacher Inspector Trigger Button (Primary Callout) -->
+        <button id="open-inspector-btn" class="relative group flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 text-white font-medium text-xs shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-105 active:scale-95 transition-all">
+          <span class="w-2 h-2 rounded-full bg-emerald-300 animate-ping"></span>
+          <span>🔬 HCI Inspector</span>
+          <span class="hidden md:inline text-[10px] bg-black/30 px-1.5 py-0.5 rounded font-mono text-indigo-200">I</span>
+        </button>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Interaction Area -->
+  <main class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10 flex flex-col items-center gap-8 w-full">
+
+    <!-- Adaptive Circadian Greeting Banner (Topic 10 Dynamic UI) -->
+    <div class="text-center max-w-2xl">
+      <div id="layout-complexity-badge" class="inline-block px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase bg-white/5 border border-white/10 text-slate-300 mb-2">
+        Balanced (Deep Execution)
+      </div>
+      <h1 id="context-greeting" class="text-2xl sm:text-4xl font-extrabold tracking-tight text-white mb-2 transition-all">
+        Good Afternoon! Primed for High Focus
+      </h1>
+      <p id="context-subtitle" class="text-sm sm:text-base text-slate-300 transition-all">
+        Circadian engine detected peak executive function. High-contrast theme active.
+      </p>
+    </div>
+
+    <!-- Central Focus Hub & Glassmorphic Pomodoro Engine -->
+    <div class="w-full max-w-md glass-panel rounded-3xl p-6 sm:p-8 flex flex-col items-center gap-6 relative overflow-hidden">
+
+      <!-- Mode Selector (Focus, Short Break, Long Break) -->
+      <div class="grid grid-cols-3 gap-2 w-full p-1 rounded-xl bg-black/30 border border-white/10" role="tablist">
+        <button id="mode-focus-btn" class="py-2 text-xs sm:text-sm font-semibold rounded-lg glass-pill active transition-all text-center" role="tab" aria-selected="true">
+          Focus (25m)
+        </button>
+        <button id="mode-short-btn" class="py-2 text-xs sm:text-sm font-semibold rounded-lg glass-pill opacity-60 transition-all text-center" role="tab" aria-selected="false">
+          Short Break (5m)
+        </button>
+        <button id="mode-long-btn" class="py-2 text-xs sm:text-sm font-semibold rounded-lg glass-pill opacity-60 transition-all text-center" role="tab" aria-selected="false">
+          Long Break (15m)
+        </button>
+      </div>
+
+      <!-- Circular SVG Progress Ring with Ambient Center Display -->
+      <div id="timer-circle-wrap" class="timer-circle-container w-[270px] h-[270px] sm:w-[310px] sm:h-[310px] rounded-full p-2">
+        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 320 320">
+          <defs>
+            <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="var(--ring-gradient-start)" />
+              <stop offset="100%" stop-color="var(--ring-gradient-end)" />
+            </linearGradient>
+          </defs>
+          <!-- Background circle track -->
+          <circle cx="160" cy="160" r="130" stroke-width="12" fill="none" class="timer-ring-bg" />
+          <!-- Animated progress circle -->
+          <circle id="timer-progress-ring" cx="160" cy="160" r="130" stroke-width="12" fill="none" stroke="url(#ringGradient)" stroke-linecap="round" class="timer-ring-progress" />
+        </svg>
+
+        <!-- Digital Timer Readout & Micro-Instructions -->
+        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <span id="timer-display" class="text-5xl sm:text-6xl font-black tracking-tight text-white font-mono drop-shadow-md">
+            25:00
+          </span>
+          <span class="text-xs font-bold uppercase tracking-widest text-indigo-300 mt-1">
+            Focus Sprint
+          </span>
+          <span class="text-[10px] text-slate-400 mt-2 font-mono hidden sm:inline">
+            [Space] to Start / Pause
+          </span>
+        </div>
+      </div>
+
+      <!-- Tactile Primary Timer Controls -->
+      <div class="flex items-center gap-3 w-full justify-center">
+        
+        <!-- Reset Button -->
+        <button id="reset-btn" class="p-3.5 rounded-2xl glass-card text-slate-300 hover:text-white hover:border-slate-400 transition-all active:scale-90" title="Reset Session (Press R)" aria-label="Reset Timer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </button>
+
+        <!-- Start / Pause Button (Hero Interactive Action) -->
+        <button id="start-pause-btn" class="flex-1 max-w-[210px] py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold text-base shadow-xl shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2">
+          <span id="start-pause-icon">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+            </svg>
+          </span>
+          <span id="start-pause-text">Start Focus</span>
+        </button>
+
+        <!-- Skip to Next Cycle Button -->
+        <button id="skip-btn" class="p-3.5 rounded-2xl glass-card text-slate-300 hover:text-white hover:border-slate-400 transition-all active:scale-90" title="Skip Session (Press S)" aria-label="Skip to Next Cycle">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+          </svg>
+        </button>
+
+      </div>
+
+      <!-- Gamified Habit Tracking Bar (Topic 6 Persuasive Reinforcement) -->
+      <div class="w-full pt-4 border-t border-white/10 flex flex-col gap-3">
+        <div class="flex items-center justify-between text-xs font-medium text-slate-300">
+          <div class="flex items-center gap-1.5">
+            <span class="streak-flame text-base">🔥</span>
+            <span>Streak: <strong id="streak-count-value" class="text-white text-sm">3</strong> Days</span>
+          </div>
+          <div>
+            <span>Daily Goal: <span id="daily-goal-ratio" class="text-indigo-300">2/4 completed (50%)</span></span>
+          </div>
+        </div>
+        <div class="flex items-center justify-between text-[11px] text-slate-400">
+          <span>Sessions Today: <strong id="sessions-today-value" class="text-slate-200">2</strong></span>
+          <span>Focus Time: <strong id="total-minutes-value" class="text-slate-200">50m</strong></span>
+        </div>
+        <!-- Progress Bar (Goal-Gradient Effect) -->
+        <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden border border-white/5">
+          <div id="daily-goal-bar" class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-700" style="width: 50%;"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Supplementary Feature: Interactive Cognitive Load & Fatigue Self-Check -->
+    <div class="w-full max-w-2xl glass-card rounded-2xl p-5 border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-amber-400 text-sm">⚡</span>
+          <h2 class="text-sm font-bold text-white tracking-wide">Cognitive Load & Fatigue Diagnostic</h2>
+        </div>
+        <p class="text-xs text-slate-400">
+          Self-report your current mental strain to let the Context Engine dynamically tune interface complexity.
+        </p>
+      </div>
+
+      <!-- 3-State Fatigue Selector -->
+      <div class="flex items-center gap-2 w-full sm:w-auto">
+        <button class="fatigue-option-btn flex-1 sm:flex-none px-3 py-2 text-xs font-semibold rounded-xl glass-pill transition-all" data-fatigue="low" title="High alertness, ready for multi-tasking">
+          🌱 Sharp
+        </button>
+        <button class="fatigue-option-btn flex-1 sm:flex-none px-3 py-2 text-xs font-semibold rounded-xl glass-pill active ring-2 ring-amber-400 transition-all" data-fatigue="normal" title="Standard balanced state">
+          ⚡ Normal
+        </button>
+        <button class="fatigue-option-btn flex-1 sm:flex-none px-3 py-2 text-xs font-semibold rounded-xl glass-pill transition-all" data-fatigue="high" title="Fatigued: Triggers sensory reduction and large touch targets">
+          🥱 Fatigued
+        </button>
+      </div>
+    </div>
+
+    <!-- Adaptive Contextual Cards (Dynamic UI Layout Complexity - Topic 10) -->
+    <div class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-4">
+
+      <!-- MORNING CARD: High Information Density (Goal Planning) -->
+      <div class="context-card-morning hidden glass-card rounded-2xl p-5 border border-sky-500/20 md:col-span-3">
+        <div class="flex items-center gap-2 mb-2 text-sky-400 font-bold text-sm">
+          <span>🌅 Morning Intentions (High Density Layout)</span>
+        </div>
+        <p class="text-xs text-slate-300 mb-3">
+          Executive function is peaking. The interface has expanded its information density to assist with task prioritization.
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <label class="flex items-center gap-2 p-2.5 rounded-xl bg-black/20 text-xs text-slate-200 cursor-pointer hover:bg-black/30">
+            <input type="checkbox" checked class="rounded text-sky-500">
+            <span>Tackle highest cognitive task</span>
+          </label>
+          <label class="flex items-center gap-2 p-2.5 rounded-xl bg-black/20 text-xs text-slate-200 cursor-pointer hover:bg-black/30">
+            <input type="checkbox" checked class="rounded text-sky-500">
+            <span>Hydrate before second coffee</span>
+          </label>
+          <label class="flex items-center gap-2 p-2.5 rounded-xl bg-black/20 text-xs text-slate-200 cursor-pointer hover:bg-black/30">
+            <input type="checkbox" class="rounded text-sky-500">
+            <span>Clear academic inbox</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- AFTERNOON CARDS: Balanced Focus Execution -->
+      <div class="context-card-afternoon glass-card rounded-2xl p-5 border border-indigo-500/20">
+        <div class="flex items-center gap-2 text-indigo-400 font-bold text-sm mb-1">
+          <span>⚡ Deep Flow State</span>
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          Balanced layout active. Extraneous alerts are suppressed to protect the 25-minute attention span.
+        </p>
+      </div>
+
+      <div class="context-card-afternoon glass-card rounded-2xl p-5 border border-purple-500/20">
+        <div class="flex items-center gap-2 text-purple-400 font-bold text-sm mb-1">
+          <span>💧 Posture & Hydration</span>
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          Afternoon slump mitigation: Align cervical spine and drink 250ml water between Pomodoro intervals.
+        </p>
+      </div>
+
+      <div class="context-card-afternoon glass-card rounded-2xl p-5 border border-sky-500/20">
+        <div class="flex items-center gap-2 text-sky-400 font-bold text-sm mb-1">
+          <span>🛡️ Commitment Device</span>
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          You are committed to 4 sessions today. Completing this one secures a 3-day consecutive focus streak.
+        </p>
+      </div>
+
+      <!-- NIGHT / HIGH FATIGUE CARDS: Minimalist Cognitive Relief -->
+      <div class="context-card-night hidden glass-card rounded-2xl p-5 border border-amber-500/20 md:col-span-3">
+        <div class="flex items-center gap-2 text-amber-400 font-bold text-sm mb-2">
+          <span>🌙 Circadian Melatonin Guard (Low Cognitive Load Layout)</span>
+        </div>
+        <p class="text-xs text-amber-200/90 leading-relaxed mb-3">
+          The interface has stripped away non-essential clutter and lowered luminance contrast. Warm amber tones preserve natural melatonin synthesis and reduce ocular fatigue before sleep.
+        </p>
+        <div class="p-3 rounded-xl bg-amber-950/40 border border-amber-500/20 text-xs text-amber-300">
+          💡 <strong>HCI Principle in Action:</strong> Sweller's Cognitive Load Theory dictates that fatigued operators experience decision paralysis. FocusFlow minimizes inputs to just one primary timer action.
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer with Academic Project Metadata -->
+  <footer class="relative z-10 border-t border-white/10 glass-panel py-6 text-center text-xs text-slate-400">
+    <div class="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div>
+        <strong class="text-white">FocusFlow</strong> &mdash; Human-Computer Interaction (HCI) Academic Project
+      </div>
+      <div class="flex items-center gap-2 font-mono text-[11px] text-slate-400">
+        <span class="px-2 py-0.5 rounded bg-white/5 border border-white/10">Space: Start/Pause</span>
+        <span class="px-2 py-0.5 rounded bg-white/5 border border-white/10">R: Reset</span>
+        <span class="px-2 py-0.5 rounded bg-white/5 border border-white/10">I: Inspector</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ======================================================================
+       HCI CONCEPT INSPECTOR (TEACHER EVALUATION SLIDE-OVER DRAWER)
+       Requested Feature #1: Detailed Theoretical Breakdown & Live Telemetry
+       ====================================================================== -->
+  <div id="drawer-backdrop" class="drawer-backdrop" aria-hidden="true"></div>
+
+  <aside id="hci-inspector-drawer" class="inspector-drawer" aria-label="HCI Concept Inspector Panel">
+    
+    <!-- Drawer Top Header -->
+    <div class="p-5 border-b border-white/10 flex items-center justify-between bg-black/40">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">🔬</span>
+        <div>
+          <h2 class="text-sm font-bold text-white tracking-wide">HCI Concept Inspector</h2>
+          <div class="text-[11px] text-slate-400">Teacher Evaluation & Telemetry Console</div>
+        </div>
+      </div>
+      <button id="close-inspector-btn" class="p-2 rounded-lg glass-pill text-slate-400 hover:text-white" aria-label="Close Inspector">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Drawer Scrollable Content -->
+    <div class="flex-1 overflow-y-auto p-5 space-y-6">
+
+      <!-- SECTION 1: TOPIC 10 - Context-Aware & Adaptive Telemetry -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
+            <span>🌐</span> Topic 10: Context Adaptation
+          </h3>
+          <span class="text-[10px] bg-sky-500/20 text-sky-300 border border-sky-400/30 px-2 py-0.5 rounded font-mono">Live Sensor</span>
+        </div>
+
+        <div class="telemetry-code space-y-1.5 text-xs">
+          <div><span class="text-slate-400">Detected Context:</span> <span id="tel-detected-context" class="text-sky-300 font-bold">AFTERNOON</span></div>
+          <div><span class="text-slate-400">Detection Method:</span> <span id="tel-override-mode" class="text-emerald-400">Automatic (Circadian Clock)</span></div>
+          <div><span class="text-slate-400">Color Spectrum:</span> <span id="tel-color-spectrum" class="text-slate-200">580nm - 620nm (Indigo/Violet)</span></div>
+          <div><span class="text-slate-400">Contrast Ratio:</span> <span id="tel-contrast-ratio" class="text-slate-200">10.8:1 (Standard Dark)</span></div>
+          <div><span class="text-slate-400">Blue-Light Shield:</span> <span id="tel-bluelight" class="text-slate-200">Inactive</span></div>
+          <div><span class="text-slate-400">Cognitive Load Target:</span> <span id="tel-cognitive-load" class="text-amber-300">Moderate (Execution)</span></div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-sky-950/30 border border-sky-500/20 text-xs">
+          <strong class="text-sky-300 block mb-1">Theoretical Rationale:</strong>
+          <p id="tel-context-rationale" class="text-slate-300 text-[11px] leading-relaxed">
+            Circadian Ergonomics (van Bommel): Lighting and color wavelength directly modulate dopamine and alertness. High contrast in the morning fosters focus; warm amber at night inhibits optical strain.
+          </p>
+        </div>
+      </div>
+
+      <!-- SECTION 2: TOPIC 6 - Persuasive Technology & Nudge Theory -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-purple-400 flex items-center gap-1.5">
+            <span>🎯</span> Topic 6: Persuasive Mechanics
+          </h3>
+          <span class="text-[10px] bg-purple-500/20 text-purple-300 border border-purple-400/30 px-2 py-0.5 rounded font-mono">Behavioral</span>
+        </div>
+
+        <div class="telemetry-code space-y-1.5 text-xs">
+          <div><span class="text-slate-400">Active Principle:</span> <span id="tel-persuasive-principle" class="text-purple-300 font-bold">Default Architecture</span></div>
+          <div><span class="text-slate-400">Underlying Model:</span> <span id="tel-persuasive-theory" class="text-pink-300">Thaler & Sunstein Nudge Theory</span></div>
+          <div><span class="text-slate-400">Psychological Driver:</span> <span id="tel-persuasive-desc" class="text-slate-200">Pre-selected optimal 25/5 cadence removes decision paralysis.</span></div>
+          <div><span class="text-slate-400">Gamified Reinforcement:</span> <span id="tel-gamification-streak" class="text-amber-300">3 Days Active</span></div>
+        </div>
+
+        <!-- Academic Theory Cards for Presentation -->
+        <div class="grid grid-cols-2 gap-2 text-[11px]">
+          <div class="p-2.5 rounded-lg bg-black/40 border border-white/5">
+            <span class="font-bold text-indigo-300 block">BJ Fogg Model</span>
+            <span class="text-slate-400">Behavior = Motivation &times; Ability &times; Prompt (B=MAP)</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-black/40 border border-white/5">
+            <span class="font-bold text-purple-300 block">Cialdini Social Proof</span>
+            <span class="text-slate-400">87% normative comparison triggers compliance</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-black/40 border border-white/5">
+            <span class="font-bold text-amber-300 block">Loss Aversion</span>
+            <span class="text-slate-400">Streak protection leverages fear of losing progress</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-black/40 border border-white/5">
+            <span class="font-bold text-emerald-300 block">Cognitive Retention</span>
+            <span class="text-slate-400">20% memory gain via structured synaptic rest</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 3: TEACHER EVALUATION SIMULATION CONTROLS -->
+      <div class="space-y-3 pt-2 border-t border-white/10">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+          <span>⚡</span> Live Demonstration Controls
+        </h3>
+        <p class="text-[11px] text-slate-400">
+          Click these buttons during instructor grading to immediately verify adaptations without waiting:
+        </p>
+
+        <!-- Fast Forward 60x Button -->
+        <button id="demo-warp-timer-btn" class="w-full py-2.5 px-3 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300 font-bold text-xs hover:bg-amber-500/30 transition-all flex items-center justify-center gap-2">
+          <span>⚡ Fast-Forward Timer (60x Speed for Demo)</span>
+        </button>
+
+        <!-- Force Context Adaptations -->
+        <div class="grid grid-cols-2 gap-2">
+          <button id="demo-force-morning" class="py-2 px-2.5 rounded-lg bg-sky-500/10 border border-sky-400/30 text-sky-300 text-xs hover:bg-sky-500/20 transition-all">
+            Force Morning Theme
+          </button>
+          <button id="demo-force-afternoon" class="py-2 px-2.5 rounded-lg bg-indigo-500/10 border border-indigo-400/30 text-indigo-300 text-xs hover:bg-indigo-500/20 transition-all">
+            Force Afternoon Theme
+          </button>
+          <button id="demo-force-night" class="py-2 px-2.5 rounded-lg bg-amber-500/10 border border-amber-400/30 text-amber-300 text-xs hover:bg-amber-500/20 transition-all">
+            Force Night Theme
+          </button>
+          <button id="demo-force-fatigue" class="py-2 px-2.5 rounded-lg bg-rose-500/10 border border-rose-400/30 text-rose-300 text-xs hover:bg-rose-500/20 transition-all">
+            Force High Fatigue UI
+          </button>
+        </div>
+
+        <!-- Trigger Psychological Nudges Directly -->
+        <div class="grid grid-cols-3 gap-2">
+          <button id="demo-trigger-retention" class="py-1.5 px-2 rounded-lg glass-pill text-[10px] text-slate-300 hover:text-white" title="Trigger Cognitive Retention Modal">
+            Nudge: Retention
+          </button>
+          <button id="demo-trigger-social" class="py-1.5 px-2 rounded-lg glass-pill text-[10px] text-slate-300 hover:text-white" title="Trigger Cialdini Social Proof Modal">
+            Nudge: Social Proof
+          </button>
+          <button id="demo-trigger-loss" class="py-1.5 px-2 rounded-lg glass-pill text-[10px] text-slate-300 hover:text-white" title="Trigger Loss Aversion Toast">
+            Nudge: Streak Alert
+          </button>
+        </div>
+
+        <!-- Increment Streak Simulation -->
+        <button id="demo-add-streak" class="w-full py-2 px-3 rounded-lg bg-purple-500/20 border border-purple-400/30 text-purple-300 text-xs font-semibold hover:bg-purple-500/30 transition-all">
+          🎉 Simulate +1 Streak Milestone (Test Audio & Flame)
+        </button>
+      </div>
+
+      <!-- SECTION 4: LIVE TELEMETRY EVENT LOG -->
+      <div class="space-y-2 pt-2 border-t border-white/10">
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-400">
+          <span>Real-Time Adaptation Log</span>
+          <span class="text-[10px] font-mono text-slate-500">Auto-streaming</span>
+        </div>
+        <div id="inspector-live-log" class="p-3 rounded-xl bg-black/60 border border-white/10 h-32 overflow-y-auto space-y-1">
+          <!-- Populated dynamically by HCIInspector.js -->
+        </div>
+      </div>
+
+    </div>
+
+  </aside>
+
+  <!-- ======================================================================
+       PERSUASIVE PSYCHOLOGICAL MICRO-INTERVENTION MODAL (TOPIC 6)
+       ====================================================================== -->
+  <div id="nudge-modal-overlay" class="nudge-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="nudge-modal-headline">
+    <div class="nudge-modal-content max-w-md w-full rounded-3xl p-6 sm:p-8 flex flex-col gap-4 text-center">
+      
+      <!-- Behavioral Category Badge -->
+      <div class="flex justify-center">
+        <span id="nudge-modal-principle" class="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+          Cognitive Retention Multiplier
+        </span>
+      </div>
+
+      <!-- Modal Headline -->
+      <h3 id="nudge-modal-headline" class="text-xl sm:text-2xl font-black text-white tracking-tight">
+        🧠 Cognitive Retention Multiplier
+      </h3>
+
+      <!-- Psychological Fact Body -->
+      <p id="nudge-modal-message" class="text-sm text-slate-300 leading-relaxed">
+        Research by the American Psychological Association demonstrates that a brief 5-minute cognitive rest period increases synaptic consolidation and information retention by up to 20%.
+      </p>
+
+      <!-- Academic Citation -->
+      <div class="p-3 rounded-xl bg-black/30 border border-white/10 text-[11px] text-slate-400 font-mono">
+        Citation: <span id="nudge-modal-citation" class="text-indigo-300">Ebbinghaus Forgetting Curve & Rest Interval Theory</span>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-col sm:flex-row items-center gap-3 pt-2">
+        <button id="nudge-modal-confirm" class="w-full sm:flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold text-sm shadow-lg shadow-indigo-500/25 transition-all">
+          Begin 5-Min Recovery
+        </button>
+        <button id="nudge-modal-dismiss" class="w-full sm:w-auto py-3 px-4 rounded-xl glass-pill text-slate-300 hover:text-white text-sm font-medium transition-all">
+          Skip (Extend Focus)
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Ephemeral Toast Container for Nudges -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Modular Scripts Architecture -->
+  <script src="js/audio.js"></script>
+  <script src="js/contextEngine.js"></script>
+  <script src="js/persuasiveEngine.js"></script>
+  <script src="js/hciInspector.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
