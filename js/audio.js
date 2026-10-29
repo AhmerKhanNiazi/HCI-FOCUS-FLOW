@@ -47,7 +47,7 @@ class AudioEngine {
       this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.masterVolume, this.ctx.currentTime);
     }
     if (this.isMuted && this.isAmbientPlaying) {
-      this.stopAmbientSound();
+      this.stopAmbientSound(true);
     }
     return this.isMuted;
   }
@@ -184,14 +184,14 @@ class AudioEngine {
   setSoundscape(name) {
     this.currentSoundscape = name;
     if (this.isAmbientPlaying) {
-      this.stopAmbientSound();
+      this.stopAmbientSound(true);
       this.startAmbientSound();
     }
   }
 
   toggleAmbientSound() {
     if (this.isAmbientPlaying) {
-      this.stopAmbientSound();
+      this.stopAmbientSound(false);
       return false;
     } else {
       this.startAmbientSound();
@@ -205,7 +205,7 @@ class AudioEngine {
     if (!this.ctx || !this.masterGain) return;
 
     try {
-      this.stopAmbientSound();
+      this.stopAmbientSound(true);
 
       if (this.currentSoundscape === 'binaural') {
         this.startBinauralBeats();
@@ -219,35 +219,54 @@ class AudioEngine {
   }
 
   startBinauralBeats() {
-    const baseFreq = 200;
-    const beatFreq = 40;
+    const carrier = 160;
+    const gammaDiff = 40;
 
     const oscLeft = this.ctx.createOscillator();
     const oscRight = this.ctx.createOscillator();
     oscLeft.type = 'sine';
     oscRight.type = 'sine';
-    oscLeft.frequency.setValueAtTime(baseFreq, this.ctx.currentTime);
-    oscRight.frequency.setValueAtTime(baseFreq + beatFreq, this.ctx.currentTime);
+    oscLeft.frequency.setValueAtTime(carrier, this.ctx.currentTime);
+    oscRight.frequency.setValueAtTime(carrier + gammaDiff, this.ctx.currentTime);
 
     const merger = this.ctx.createChannelMerger(2);
     oscLeft.connect(merger, 0, 0);
     oscRight.connect(merger, 0, 1);
 
+    const lowpass = this.ctx.createBiquadFilter();
+    lowpass.type = 'lowpass';
+    lowpass.frequency.setValueAtTime(380, this.ctx.currentTime);
+    merger.connect(lowpass);
+
+    const noiseBuffer = this.createPinkNoiseBuffer();
+    const noiseNode = this.ctx.createBufferSource();
+    noiseNode.buffer = noiseBuffer;
+    noiseNode.loop = true;
+    const noiseFilter = this.ctx.createBiquadFilter();
+    noiseFilter.type = 'lowpass';
+    noiseFilter.frequency.setValueAtTime(450, this.ctx.currentTime);
+    const noiseGain = this.ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.04, this.ctx.currentTime);
+    noiseNode.connect(noiseFilter);
+    noiseFilter.connect(noiseGain);
+
     this.ambientGain = this.ctx.createGain();
     this.ambientGain.gain.setValueAtTime(0.01, this.ctx.currentTime);
-    this.ambientGain.gain.exponentialRampToValueAtTime(this.ambientVolume * 0.4, this.ctx.currentTime + 1.2);
+    this.ambientGain.gain.linearRampToValueAtTime(this.ambientVolume * 0.45, this.ctx.currentTime + 0.8);
 
-    merger.connect(this.ambientGain);
+    lowpass.connect(this.ambientGain);
+    noiseGain.connect(this.ambientGain);
     this.ambientGain.connect(this.masterGain);
 
     oscLeft.start();
     oscRight.start();
+    noiseNode.start();
 
     this.ambientNode = oscLeft;
-    this.ambientExtraNodes = [oscRight, merger];
+    this.ambientExtraNodes = [oscRight, merger, lowpass, noiseNode, noiseFilter, noiseGain];
   }
 
-  startNoiseSoundscape(type) {
+  createPinkNoiseBuffer() {
     const bufferSize = 2 * this.ctx.sampleRate;
     const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const output = noiseBuffer.getChannelData(0);
@@ -255,18 +274,29 @@ class AudioEngine {
 
     for (let i = 0; i < bufferSize; i++) {
       const white = Math.random() * 2 - 1;
-      if (type === 'whitenoise') {
-        output[i] = white * 0.05;
-      } else {
-        b0 = 0.99886 * b0 + white * 0.0555179;
-        b1 = 0.99332 * b1 + white * 0.0750759;
-        b2 = 0.96900 * b2 + white * 0.1538520;
-        b3 = 0.86650 * b3 + white * 0.3104856;
-        b4 = 0.55000 * b4 + white * 0.5329522;
-        b5 = -0.7616 * b5 - white * 0.0168980;
-        output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.035;
-        b6 = white * 0.115926;
+      b0 = 0.99886 * b0 + white * 0.0555179;
+      b1 = 0.99332 * b1 + white * 0.0750759;
+      b2 = 0.96900 * b2 + white * 0.1538520;
+      b3 = 0.86650 * b3 + white * 0.3104856;
+      b4 = 0.55000 * b4 + white * 0.5329522;
+      b5 = -0.7616 * b5 - white * 0.0168980;
+      output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.035;
+      b6 = white * 0.115926;
+    }
+    return noiseBuffer;
+  }
+
+  startNoiseSoundscape(type) {
+    let noiseBuffer;
+    if (type === 'whitenoise') {
+      const bufferSize = 2 * this.ctx.sampleRate;
+      noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = (Math.random() * 2 - 1) * 0.025;
       }
+    } else {
+      noiseBuffer = this.createPinkNoiseBuffer();
     }
 
     this.ambientNode = this.ctx.createBufferSource();
@@ -274,55 +304,71 @@ class AudioEngine {
     this.ambientNode.loop = true;
 
     const filter = this.ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    const cutoff = type === 'waves' ? 450 : type === 'whitenoise' ? 1200 : 650;
-    filter.frequency.setValueAtTime(cutoff, this.ctx.currentTime);
-
     if (type === 'waves') {
+      filter.type = 'lowpass';
+      filter.Q.setValueAtTime(2.2, this.ctx.currentTime);
+      filter.frequency.setValueAtTime(400, this.ctx.currentTime);
+
       const lfo = this.ctx.createOscillator();
       const lfoGain = this.ctx.createGain();
-      lfo.frequency.setValueAtTime(0.12, this.ctx.currentTime);
-      lfoGain.gain.setValueAtTime(250, this.ctx.currentTime);
+      lfo.type = 'sine';
+      lfo.frequency.setValueAtTime(0.1, this.ctx.currentTime);
+      lfoGain.gain.setValueAtTime(320, this.ctx.currentTime);
+
       lfo.connect(lfoGain);
       lfoGain.connect(filter.frequency);
       lfo.start();
       this.ambientExtraNodes.push(lfo, lfoGain);
+    } else if (type === 'whitenoise') {
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(1100, this.ctx.currentTime);
+      filter.Q.setValueAtTime(0.7, this.ctx.currentTime);
+    } else {
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(700, this.ctx.currentTime);
     }
 
     this.ambientGain = this.ctx.createGain();
     this.ambientGain.gain.setValueAtTime(0.01, this.ctx.currentTime);
-    this.ambientGain.gain.exponentialRampToValueAtTime(this.ambientVolume, this.ctx.currentTime + 1.2);
+    this.ambientGain.gain.linearRampToValueAtTime(this.ambientVolume, this.ctx.currentTime + 0.8);
 
     this.ambientNode.connect(filter);
     filter.connect(this.ambientGain);
     this.ambientGain.connect(this.masterGain);
 
     this.ambientNode.start();
+    this.ambientExtraNodes.push(filter);
   }
 
-  stopAmbientSound() {
-    if (this.ambientGain && this.ctx) {
-      try {
-        this.ambientGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.4);
-      } catch (e) {}
-    }
+  stopAmbientSound(immediate = false) {
+    if (!this.isAmbientPlaying && !this.ambientNode && this.ambientExtraNodes.length === 0) return;
 
-    setTimeout(() => {
-      if (this.ambientNode) {
-        try { this.ambientNode.stop(); } catch (_) {}
-        try { this.ambientNode.disconnect(); } catch (_) {}
-        this.ambientNode = null;
-      }
-      if (this.ambientExtraNodes && this.ambientExtraNodes.length > 0) {
-        this.ambientExtraNodes.forEach(node => {
-          try { if (node.stop) node.stop(); } catch (_) {}
-          try { node.disconnect(); } catch (_) {}
-        });
-        this.ambientExtraNodes = [];
-      }
-    }, 450);
+    const oldNode = this.ambientNode;
+    const oldExtras = [...this.ambientExtraNodes];
+    const oldGain = this.ambientGain;
 
+    this.ambientNode = null;
+    this.ambientExtraNodes = [];
+    this.ambientGain = null;
     this.isAmbientPlaying = false;
+
+    if (immediate || !this.ctx || !oldGain) {
+      try { if (oldNode) { oldNode.stop(); oldNode.disconnect(); } } catch (_) {}
+      oldExtras.forEach(n => {
+        try { if (n.stop) n.stop(); n.disconnect(); } catch (_) {}
+      });
+    } else {
+      try {
+        oldGain.gain.setValueAtTime(oldGain.gain.value, this.ctx.currentTime);
+        oldGain.gain.linearRampToValueAtTime(0.0001, this.ctx.currentTime + 0.25);
+      } catch (_) {}
+      setTimeout(() => {
+        try { if (oldNode) { oldNode.stop(); oldNode.disconnect(); } } catch (_) {}
+        oldExtras.forEach(n => {
+          try { if (n.stop) n.stop(); n.disconnect(); } catch (_) {}
+        });
+      }, 300);
+    }
   }
 }
 

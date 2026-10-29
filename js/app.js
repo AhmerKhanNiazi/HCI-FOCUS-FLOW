@@ -202,21 +202,37 @@ class FocusFlowApp {
     soundscapeBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         const soundscape = btn.dataset.soundscape;
-        window.AudioEngine.setSoundscape(soundscape);
-
-        soundscapeBtns.forEach(b => {
-          b.classList.remove('active', 'border-emerald-400');
-          b.classList.add('opacity-70');
-        });
-        btn.classList.add('active', 'border-emerald-400');
-        btn.classList.remove('opacity-70');
-
+        const isCurrentActive = (window.AudioEngine.currentSoundscape === soundscape && window.AudioEngine.isAmbientPlaying);
         const statusLabel = document.getElementById('ambient-sound-status');
-        if (statusLabel && window.AudioEngine.isAmbientPlaying) {
-          statusLabel.textContent = `${soundscape.toUpperCase()} (Active)`;
-        }
 
-        window.HCIInspector.logEvent('SOUNDSCAPE_CHANGE', `Auditory soundscape switched to: [${soundscape.toUpperCase()}].`);
+        if (isCurrentActive) {
+          window.AudioEngine.stopAmbientSound();
+          btn.classList.remove('active', 'border-emerald-400');
+          btn.classList.add('opacity-70');
+          if (ambientBtn) {
+            ambientBtn.classList.remove('active', 'bg-sky-500/20', 'border-sky-400');
+          }
+          if (statusLabel) statusLabel.textContent = 'Focus Noise (Off)';
+          window.HCIInspector.logEvent('AUDIO_MASKING', 'Soundscape paused.');
+        } else {
+          window.AudioEngine.setSoundscape(soundscape);
+          window.AudioEngine.startAmbientSound();
+
+          soundscapeBtns.forEach(b => {
+            b.classList.remove('active', 'border-emerald-400');
+            b.classList.add('opacity-70');
+          });
+          btn.classList.add('active', 'border-emerald-400');
+          btn.classList.remove('opacity-70');
+
+          if (ambientBtn) {
+            ambientBtn.classList.add('active', 'bg-sky-500/20', 'border-sky-400');
+          }
+          if (statusLabel) {
+            statusLabel.textContent = `${soundscape.toUpperCase()} (Active)`;
+          }
+          window.HCIInspector.logEvent('SOUNDSCAPE_CHANGE', `Auditory soundscape switched to: [${soundscape.toUpperCase()}].`);
+        }
       });
     });
 
