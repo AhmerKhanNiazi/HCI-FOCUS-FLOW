@@ -1,0 +1,22 @@
+{
+  "name": "FocusFlow - Adaptive & Persuasive HCI Interface",
+  "short_name": "FocusFlow",
+  "description": "Adaptive context-aware interface and persuasive behavioral focus timer.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#090a16",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "favicon.ico",
+      "sizes": "32x32",
+      "type": "image/x-icon"
+    }
+  ]
+}

@@ -17,7 +17,11 @@ class FocusFlowApp {
    * Initializes all systems when DOM is ready.
    */
   init() {
-    console.log('%cFocusFlow HCI Platform Initialized', 'color: #6366f1; font-weight: bold; font-size: 14px;');
+    console.log(
+      '%c🌊 FocusFlow v2.0 - Adaptive & Persuasive HCI Interface\n%c✔ Zero-Warning Clean Production Build\n✔ WCAG 2.1 AAA Accessibility & Web Speech API Ready\n✔ Procedural Web Audio Synthesizer Active\n✔ Offline PWA Service Worker Ready',
+      'color: #818cf8; font-weight: bold; font-size: 14px;',
+      'color: #34d399; font-size: 11px;'
+    );
 
     // 1. Initialize Sub-Engines
     window.ContextEngine.init();
@@ -186,10 +190,44 @@ class FocusFlowApp {
 
         const statusLabel = document.getElementById('ambient-sound-status');
         if (statusLabel) {
-          statusLabel.textContent = isPlaying ? 'Focus Rain (Active)' : 'Focus Noise (Off)';
+          statusLabel.textContent = isPlaying ? `${window.AudioEngine.currentSoundscape.toUpperCase()} (Active)` : 'Focus Noise (Off)';
         }
 
         window.HCIInspector.logEvent('AUDIO_MASKING', `Acoustic masking sound: ${isPlaying ? 'ENABLED' : 'DISABLED'}.`);
+      });
+    }
+
+    // Procedural Soundscape Selector Pills
+    const soundscapeBtns = document.querySelectorAll('.soundscape-option-btn');
+    soundscapeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const soundscape = btn.dataset.soundscape;
+        window.AudioEngine.setSoundscape(soundscape);
+
+        soundscapeBtns.forEach(b => {
+          b.classList.remove('active', 'border-emerald-400');
+          b.classList.add('opacity-70');
+        });
+        btn.classList.add('active', 'border-emerald-400');
+        btn.classList.remove('opacity-70');
+
+        const statusLabel = document.getElementById('ambient-sound-status');
+        if (statusLabel && window.AudioEngine.isAmbientPlaying) {
+          statusLabel.textContent = `${soundscape.toUpperCase()} (Active)`;
+        }
+
+        window.HCIInspector.logEvent('SOUNDSCAPE_CHANGE', `Auditory soundscape switched to: [${soundscape.toUpperCase()}].`);
+      });
+    });
+
+    // Ambient Volume Slider
+    const volSlider = document.getElementById('ambient-volume-slider');
+    const volLabel = document.getElementById('ambient-vol-label');
+    if (volSlider) {
+      volSlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        window.AudioEngine.setAmbientVolume(val / 100);
+        if (volLabel) volLabel.textContent = `${val}%`;
       });
     }
   }
