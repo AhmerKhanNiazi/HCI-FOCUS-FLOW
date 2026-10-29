@@ -40,6 +40,10 @@ Use these shortcuts during the demo to show your mastery of **HCI Ergonomics & P
 | Key | Action | HCI Ergonomic Benefit |
 | :---: | :--- | :--- |
 | **`Spacebar`** | Start / Pause Timer | **Fitts's Law:** Large primary motor target for immediate control without looking at the mouse. |
+| **`V`** | Toggle Voice Control | **Universal Accessibility (Hands-Free):** Speech recognition for motor-impaired users. |
+| **`C`** | Toggle High Contrast | **WCAG AAA Compliance:** 7:1+ solid contrast for low-vision & cognitive needs. |
+| **`F`** | Cycle Font Size | **Visual Ergonomics:** 100% / 125% / 150% dynamic font enlargement. |
+| **`?` or `H`** | Accessibility Guide | In-depth help dialog for switch navigation and voice command glossary. |
 | **`I`** | Open / Close HCI Inspector | Instant slide-over access to academic telemetry and demonstration controls. |
 | **`R`** | Reset Current Session | **Nielsen Heuristic #5 (Error Recovery):** Instant state restoration. |
 | **`S`** | Skip to Next Cycle | Accelerates workflow testing for power users. |

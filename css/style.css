@@ -163,10 +163,11 @@ html, body {
   filter: var(--filter-blue-light);
 }
 
-/* Smooth Focus Ring for Keyboard Accessibility (HCI Principle) */
+/* Smooth High-Visibility Focus Ring for Keyboard & Switch Accessibility (WCAG 2.1 AAA) */
 *:focus-visible {
-  outline: 2px solid var(--accent-primary);
-  outline-offset: 3px;
+  outline: 3px solid #facc15 !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 5px rgba(0, 0, 0, 0.85) !important;
   border-radius: 6px;
 }
 
@@ -506,4 +507,152 @@ html, body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* --------------------------------------------------------------------------
+   11. Universal Accessibility & Inclusive Design (WCAG 2.1 AAA)
+   - High Contrast Mode
+   - Dynamic Font Scaling
+   - Skip to Main Content Link
+   - Voice Control Visual Pulse & Feedback
+   -------------------------------------------------------------------------- */
+
+/* Skip to Content Link for Screen Reader & Switch Users */
+.skip-link {
+  position: absolute;
+  top: -120px;
+  left: 1.5rem;
+  z-index: 100;
+  padding: 0.875rem 1.5rem;
+  background-color: #facc15;
+  color: #000000;
+  font-weight: 800;
+  font-size: 0.875rem;
+  text-decoration: none;
+  border: 3px solid #000000;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  transition: top 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.skip-link:focus {
+  top: 1.25rem;
+  outline: 3px solid #ffffff !important;
+}
+
+/* Dynamic Font Scaling */
+html[data-font-size="large"] {
+  font-size: 116%;
+}
+
+html[data-font-size="xlarge"] {
+  font-size: 130%;
+}
+
+/* High Contrast Mode (WCAG AAA 7:1+ Contrast Ratio) */
+html[data-high-contrast="true"] {
+  --bg-primary: #000000 !important;
+  --bg-secondary: #000000 !important;
+  --glass-bg: #000000 !important;
+  --glass-card: #050505 !important;
+  --glass-border: #ffffff !important;
+  --glass-border-focus: #facc15 !important;
+  --glass-shadow: none !important;
+
+  --accent-primary: #facc15 !important;
+  --accent-secondary: #38bdf8 !important;
+  --accent-glow: transparent !important;
+  --accent-text: #ffffff !important;
+
+  --text-primary: #ffffff !important;
+  --text-secondary: #ffffff !important;
+  --text-muted: #e2e8f0 !important;
+
+  --ring-gradient-start: #facc15 !important;
+  --ring-gradient-end: #facc15 !important;
+
+  --filter-blue-light: none !important;
+}
+
+html[data-high-contrast="true"] .ambient-container {
+  display: none !important;
+}
+
+html[data-high-contrast="true"] .glass-panel,
+html[data-high-contrast="true"] .glass-card,
+html[data-high-contrast="true"] .glass-pill {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: #000000 !important;
+  border: 2px solid #ffffff !important;
+}
+
+html[data-high-contrast="true"] .glass-pill:hover,
+html[data-high-contrast="true"] .glass-pill.active {
+  background-color: #facc15 !important;
+  color: #000000 !important;
+  border-color: #facc15 !important;
+}
+
+html[data-high-contrast="true"] button:focus-visible,
+html[data-high-contrast="true"] a:focus-visible,
+html[data-high-contrast="true"] select:focus-visible {
+  outline: 4px solid #facc15 !important;
+  outline-offset: 4px !important;
+  border-color: #facc15 !important;
+}
+
+/* Voice Control Visual Feedback Pulse */
+.voice-mic-active {
+  animation: voicePulseAnim 1.4s ease-in-out infinite;
+}
+
+@keyframes voicePulseAnim {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7);
+  }
+  70% {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 10px rgba(244, 63, 94, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0);
+  }
+}
+
+/* Accessibility Help Modal */
+.a11y-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.a11y-modal-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.a11y-modal-content {
+  background: var(--glass-bg);
+  border: 2px solid var(--glass-border);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+  max-height: 88vh;
+  overflow-y: auto;
+  transform: scale(0.95);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.a11y-modal-overlay.open .a11y-modal-content {
+  transform: scale(1);
 }

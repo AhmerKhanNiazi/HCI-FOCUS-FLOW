@@ -22,6 +22,7 @@ class FocusFlowApp {
     // 1. Initialize Sub-Engines
     window.ContextEngine.init();
     window.HCIInspector.init();
+    if (window.AccessibilityEngine) window.AccessibilityEngine.init();
 
     // 2. Setup Progress Ring SVG stroke dasharray
     this.setupProgressRing();
@@ -340,6 +341,24 @@ class FocusFlowApp {
           const muteBtn = document.getElementById('audio-mute-btn');
           if (muteBtn) muteBtn.click();
           break;
+        case 'KeyV':
+          if (window.AccessibilityEngine) window.AccessibilityEngine.toggleVoiceControl();
+          break;
+        case 'KeyC':
+          if (window.AccessibilityEngine) window.AccessibilityEngine.toggleHighContrast();
+          break;
+        case 'KeyF':
+          if (window.AccessibilityEngine) window.AccessibilityEngine.cycleFontSize();
+          break;
+        case 'KeyH':
+          if (window.AccessibilityEngine) window.AccessibilityEngine.openHelpModal();
+          break;
+        case 'Slash':
+          if (e.shiftKey && window.AccessibilityEngine) {
+            e.preventDefault();
+            window.AccessibilityEngine.openHelpModal();
+          }
+          break;
       }
     });
   }
@@ -352,6 +371,16 @@ class FocusFlowApp {
     const timerDisplay = document.getElementById('timer-display');
     if (timerDisplay) {
       timerDisplay.textContent = data.formattedTime;
+    }
+
+    const timerWrap = document.getElementById('timer-circle-wrap');
+    if (timerWrap) {
+      timerWrap.setAttribute('aria-valuenow', Math.round(data.progress * 100));
+      timerWrap.setAttribute('aria-valuetext', `${data.formattedTime} remaining in ${data.currentMode}`);
+    }
+
+    if (window.AccessibilityEngine) {
+      window.AccessibilityEngine.announceTimerMilestone(data.timeLeft, data.totalDuration, data.currentMode, data.isRunning);
     }
 
     // Update document title for background productivity awareness
