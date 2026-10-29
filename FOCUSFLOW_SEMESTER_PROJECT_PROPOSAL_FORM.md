@@ -127,6 +127,8 @@ The project employs an **Iterative User-Centered Design (UCD) & Agile Methodolog
 
 ## Gantt Chart
 
+![FocusFlow 32-Week Project Timeline Gantt Chart](./focusflow_gantt_chart.png)
+
 ```text
 Task / Milestone                     W1-4   W5-8   W9-12  W13-16 W17-20 W21-24 W25-28 W29-32
 -----------------------------------------------------------------------------------------
